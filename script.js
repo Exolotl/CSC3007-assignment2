@@ -1,4 +1,6 @@
-var crimeData ={}
+var crimeData ={};
+
+var selectedYear = "2020";
 
 fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19-4b54-ab6b-d999c251edcf')
     // get API response
@@ -10,47 +12,51 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
     // for console log debugging
     .then(test => console.log(crimeData))
 
+    // show year of data
     .then(selectYear => {
-        var selectedYear = "2020";
         var yearSpan = document.createElement('span');
         yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
         document.getElementById("crimeYear").appendChild(yearSpan);
+        return selectedYear;
     })
 
-    .then(visualize => {
-        let selectedYear = "2020";
+    // show data graph
+    .then((visualize) => {
+        //filter json data by year
         let data = crimeData.records.filter(({year}) => year === selectedYear);
         data.sort((a, b)  => a.value - b.value)
         console.log(data);
 
-        let svgWidth = 700
-        let svgHeight = 300
-
+        // set SVG size
+        let svgWidth = 700;
+        let svgHeight = 300;
         let margin = {top: 10, right: 20, bottom: 80, left: 50},
             width = svgWidth - margin.left - margin.right,
             height = svgHeight - margin.top - margin.bottom;
 
+        // create SVG
         let chart = d3.select("#crimeGraph")
             .append("svg")
             .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        // Add scales
+        // add x scale
         let xScale = d3.scaleBand()
             .domain(data.map(d => d.level_2))
             .rangeRound([0, width])
             .padding(0.1);
         
+        // add y scale
         let yMax = Math.ceil(
             d3.max(data, d => parseInt(d.value))/1000
         ) * 1000;
-        
+
         let yScale = d3.scaleLinear()
             .domain([0, yMax])
             .rangeRound([height, 0]);
         
-        // Add x-axis
+        // add x-axis
         chart
             .append("g")
             .attr("class", "axis axis-x")
@@ -61,7 +67,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
                 .style("text-anchor", "end")
                 .style("font-size","10px");
 
-        // Add y-axis
+        // add y-axis
         chart
             .append("g")
             .attr("class", "axis axis-y")
@@ -69,7 +75,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .selectAll("text")
                 .style("font-size","10px");
         
-        // Add y-axis gridlines
+        // add y-axis gridlines
         // chart.append("g")
         //     .attr("class", "grid")
         //     .call(d3.axisLeft(yScale)
@@ -78,6 +84,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
         //         .ticks(10)
         //     );
 
+        // create tooltip div
         let tooltip = d3.select("#crimeGraph")
             .attr("class", "tooltip")    
             .append("div")
@@ -88,6 +95,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .style("border-radius", "5px")
             .style("padding", "5px")
 
+        // mouseover events
         let mouseover = function(event, d) {
             // Tooltip
             tooltip
@@ -103,13 +111,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
                 .style("opacity", 0.8)
         }
 
-        // let mousemove = (event, d) => {
-        //     Tooltip
-                
-        //         .style("top", (event.pageY)+"px")
-        //         .style("left",(event.pageX)+"px")
-        // }
-
+        // mouseleave events
         let mouseleave = function(d) {
             tooltip
                 .transition()
@@ -120,6 +122,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
                 .style("opacity", 1)
         }
 
+        // create chart
         chart.selectAll("rect")
             .data(data)
             .enter()
