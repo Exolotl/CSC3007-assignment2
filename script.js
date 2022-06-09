@@ -10,115 +10,29 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
     // for console log debugging
     .then(test => console.log(crimeData))
 
+    .then(selectYear => {
+        var selectedYear = "2020";
+        var yearSpan = document.createElement('span');
+        yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
+        document.getElementById("crimeYear").appendChild(yearSpan);
+    })
+
     .then(visualize => {
-        let data = [
-            {text: "Hello World 1", size: 10, color: "green", font: "Courier New"},
-            {text: "Hello World 2", size: 20, color: "blue", font: "Arial"},
-            {text: "Hello World 3", size: 30, color: "red", font: "Times New Roman"}
-        ];
-        
-        let hellos = d3.select("#textScript");
-        
-        hellos.selectAll("p")
-        .data(data)
-        .enter()
-        .append("p")
-        .text(d => d.text)
-
-        .transition()
-        .duration((d,i) => i * 1000)
-
-        .style("font-size", d => d.size + "px")
-        .style("color", d => d.color);
-    })
-
-    .then(exampleGraph => {
-        let data = [
-            {cx: 400, cy: 600, r:150, fill: "green", stroke: "black"},
-            {cx: 100, cy: 200, r:50, fill: "blue", stroke: "purple"},
-            {cx: 650, cy: 100, r:100, fill: "red", stroke: "orange"}
-        ];
-        
-        let margin = {top: 20, right: 20, bottom: 40, left: 40},
-            width = 600 - margin.left - margin.right,
-            height = 600 - margin.top - margin.bottom;
-
-        let chart = d3.select("#graphScript")
-            .attr("width", 1000)
-            .attr("height", 1000)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-        
-        let xScale = d3.scaleLinear()
-            .domain([0,1000])
-            .range([0,width]);
-
-        let yScale = d3.scaleLinear()
-            .domain([0,1000])
-            .range([height,0]);
-
-        let colorScale = d3.scaleLinear()
-            .domain([0, 300])
-            .range([0,1]);
-        
-        chart.selectAll("circle")
-            .data(data)
-            .enter()
-            .append("circle")
-
-            .transition()
-            .duration((d,i) => i * 1000)
-
-            .attr("cx", d => xScale(d.cx))
-            .attr("cy", d => yScale(d.cy))
-            .attr("r", d => d.r)
-            .attr("fill", d => d3.interpolateViridis(colorScale(d.r)));
-            //.attr("fill", d => d.fill);
-
-        chart
-            .append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(xScale));
-        
-        chart
-            .append("g")
-            .call(d3.axisLeft(yScale));
-    
-        chart
-            .append("text")
-            .attr("transform", "translate(" + (width / 2) + "," + (height + 40) + ")")
-            .text("X-axis label")
-            .attr("text-align", "middle");
-        
-        chart
-            .append("text")
-            .attr("transform", "translate(-40, " + (height / 2) + ") rotate(-90)")
-            .text("Y-axis label")
-            .attr("text-align", "middle");
-            
-        chart
-            .on("mouseover", (event, d) => {
-                d3.select(event.currentTarget)
-                .attr("stroke", "black")
-                .attr("stroke-width", 1);
-            }) 
-            .on("mouseout", (event, d) => {
-                d3.select(event.currentTarget)
-                .attr("stroke", "none");
-            })
-    })
-
-    .then(graph => {
         let selectedYear = "2020";
         let data = crimeData.records.filter(({year}) => year === selectedYear);
-        data.sort((a, b)  => b.value - a.value)
+        data.sort((a, b)  => a.value - b.value)
         console.log(data);
 
-        let margin = {top: 25, right: 25, bottom: 100, left: 75},
-            width = 700 - margin.left - margin.right,
-            height = 350 - margin.top - margin.bottom;
+        let svgWidth = 700
+        let svgHeight = 300
+
+        let margin = {top: 10, right: 20, bottom: 80, left: 50},
+            width = svgWidth - margin.left - margin.right,
+            height = svgHeight - margin.top - margin.bottom;
 
         let chart = d3.select("#crimeGraph")
+            .append("svg")
+            .attr("viewBox", "0 0 " + svgWidth + " " + svgHeight)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -164,33 +78,42 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
         //         .ticks(10)
         //     );
 
-        var Tooltip = d3.select("#crimeGraph")
+        let tooltip = d3.select("#crimeGraph")
+            .attr("class", "tooltip")    
             .append("div")
             .style("opacity", 0)
-            .attr("class", "tooltip")
             .style("background-color", "white")
             .style("border", "solid")
             .style("border-width", "2px")
             .style("border-radius", "5px")
             .style("padding", "5px")
 
-        var mouseover = function(d) {
-            Tooltip
-                .style("opacity", 1)
+        let mouseover = function(event, d) {
+            // Tooltip
+            tooltip
+                .transition()
+                .duration(300)
+                .style("opacity", 0.9);
+            tooltip
+                .html("There were " + d.value + " occurences of "  + d.level_2 + " in " + selectedYear + ".")
+                .style("top", (event.pageY)+"px")
+                .style("left",(event.pageX)+"px")
             d3.select(this)
                 .style("stroke", "black")
                 .style("opacity", 0.8)
         }
 
-        var mousemove = function(d) {
-            Tooltip
-                .html("The exact value of<br>this cell is: " + d.value)
-                .style("left", (d3.pointer(this)[0]+70) + "px")
-                .style("top", (d3.pointer(this)[1]) + "px")
-        }
+        // let mousemove = (event, d) => {
+        //     Tooltip
+                
+        //         .style("top", (event.pageY)+"px")
+        //         .style("left",(event.pageX)+"px")
+        // }
 
-        var mouseout = function(d) {
-            Tooltip
+        let mouseleave = function(d) {
+            tooltip
+                .transition()
+                .duration(500)
                 .style("opacity", 0)
             d3.select(this)
                 .style("stroke", "none")
@@ -201,13 +124,12 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .data(data)
             .enter()
             .append("rect")
-                .attr("x", function(d) { return xScale(d.level_2); })
-                .attr("y", function(d) { return yScale(d.value); })
-                .attr("width", function(d) {return xScale.bandwidth(); })
-                .attr("height", function(d) { return height - yScale(d.value); })
-                .attr("class", "svgRect")
-                .attr("fill", "crimson")
+            .attr("x", d => xScale(d.level_2))
+            .attr("y", d => yScale(d.value))
+            .attr("width", d => xScale.bandwidth())
+            .attr("height", d => height - yScale(d.value))
+            .attr("class", "svgRect")
+            .attr("fill", "crimson")
             .on("mouseover", mouseover)
-            .on("mousemove", mousemove)
-            .on("mouseout", mouseout);
+            .on("mouseleave", mouseleave);
     })
