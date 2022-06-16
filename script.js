@@ -137,7 +137,6 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
 
             let data = crimeData.records.filter(({year}) => year === selectedYear);
             data.sort((a, b)  => a.value - b.value);
-            console.log(data);
 
             xScale.domain(data.map(function(d) { return d.level_2; }));
             chart.select("g .axis-x")
