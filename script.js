@@ -131,7 +131,10 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             while (yearDiv.firstChild) {
                 yearDiv.removeChild(yearDiv.firstChild);
             }
-            
+            var yearSpan = document.createElement('span');
+            yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
+            yearDiv.appendChild(yearSpan);
+
             let data = crimeData.records.filter(({year}) => year === selectedYear);
             data.sort((a, b)  => a.value - b.value);
             console.log(data);
@@ -177,10 +180,6 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
                     .remove()
                    )
                 );
-            
-            var yearSpan = document.createElement('span');
-            yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
-            yearDiv.appendChild(yearSpan);
         }
 
 
