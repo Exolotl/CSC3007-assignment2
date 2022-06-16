@@ -1,6 +1,10 @@
 var crimeData ={};
 
-var selectedYear = "2020";
+var dropdown = document.querySelector('.dropdown');
+dropdown.addEventListener('click', function(event) {
+  event.stopPropagation();
+  dropdown.classList.toggle('is-active');
+});
 
 fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19-4b54-ab6b-d999c251edcf')
     // get API response
@@ -14,18 +18,13 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
 
     // show year of data
     .then(selectYear => {
-        var yearSpan = document.createElement('span');
-        yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
-        document.getElementById("crimeYear").appendChild(yearSpan);
-        return selectedYear;
+        
     })
 
     // show data graph
     .then((visualize) => {
         //filter json data by year
-        let data = crimeData.records.filter(({year}) => year === selectedYear);
-        data.sort((a, b)  => a.value - b.value)
-        console.log(data);
+        let data = crimeData.records;
 
         // set SVG size
         let svgWidth = 700, svgHeight = 300;
@@ -96,7 +95,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
         // mousemove events
         let mousemove = function(event, d) {
             tooltip
-                .html("There were " + d.value + " occurences of "  + d.level_2 + " in " + selectedYear + ".")
+                .html("There were " + d.value + " occurences of "  + d.level_2 + " in " + d.year + ".")
                 .style("position", "absolute")
                 .style("top", (event.pageY)+"px")
                 .style("left",(event.pageX)+"px");
@@ -112,17 +111,111 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
         }
 
         // create chart
-        chart.selectAll("rect")
-            .data(data)
-            .enter()
-            .append("rect")
-            .attr("x", d => xScale(d.level_2))
-            .attr("y", d => yScale(d.value))
-            .attr("width", d => xScale.bandwidth())
-            .attr("height", d => height - yScale(d.value))
-            .attr("class", "svgRect")
-            .attr("fill", "crimson")
-            .on("mouseover", mouseover)
-            .on("mousemove", mousemove)
-            .on("mouseleave", mouseleave);
+        // chart.selectAll("rect")
+        //     .data(data)
+        //     .enter()
+        //     .append("rect")
+        //     .attr("x", d => xScale(d.level_2))
+        //     .attr("y", d => yScale(d.value))
+        //     .attr("width", d => xScale.bandwidth())
+        //     .attr("height", d => height - yScale(d.value))
+        //     .attr("class", "svgRect")
+        //     .attr("fill", "crimson")
+        //     .on("mouseover", mouseover)
+        //     .on("mousemove", mousemove)
+        //     .on("mouseleave", mouseleave);
+
+        function drawChart(selectedYear) {
+
+            let yearDiv = document.getElementById("crimeYear");
+            while (yearDiv.firstChild) {
+                yearDiv.removeChild(yearDiv.firstChild);
+            }
+            
+            let data = crimeData.records.filter(({year}) => year === selectedYear);
+            data.sort((a, b)  => a.value - b.value);
+            console.log(data);
+
+            xScale.domain(data.map(function(d) { return d.level_2; }));
+            chart.select("g .axis-x")
+                .transition()
+                .duration(1000)
+                .call(d3.axisBottom(xScale));
+
+            chart.selectAll("rect")
+                .data(data)
+                .join(
+                enter => enter
+                    .append("rect")
+                    .attr("x", d => xScale(d.level_2))
+                    .attr("y", d => yScale(d.value))
+                    .attr("width", 0)
+                    .attr("height", 0)
+                    .attr("class", "svgRect")
+                    .attr("fill", "crimson")
+                    .on("mouseover", mouseover)
+                    .on("mousemove", mousemove)
+                    .on("mouseleave", mouseleave)
+                  .call(enter => enter.transition()
+                    .duration(1000)
+                    .attr("width", xScale.bandwidth())
+                    .attr("height", d => height - yScale(d.value))
+                   ),
+                update => update 
+                  .call(update => update.transition()
+                    .duration(1000)
+                    .attr("x", d => xScale(d.level_2))
+                    .attr("y", d => yScale(d.value))
+                    .attr("width", xScale.bandwidth())
+                    .attr("height", d => height - yScale(d.value))
+                   ),
+                exit => exit
+                  .call(exit => exit.transition()
+                    .duration(1000)
+                    .attr("width", 0)
+                    .attr("height", 0)
+                    .remove()
+                   )
+                );
+            
+            var yearSpan = document.createElement('span');
+            yearSpan.innerHTML = "<strong>Year:</strong> " + selectedYear;
+            yearDiv.appendChild(yearSpan);
+        }
+
+
+        d3.select("#bt2020").on("click", function() {
+            
+            drawChart("2020");
+        });
+        d3.select("#bt2019").on("click", function() {
+            drawChart("2019");
+        });
+        d3.select("#bt2018").on("click", function() {
+            drawChart("2018");
+        });
+        d3.select("#bt2017").on("click", function() {
+            drawChart("2017");
+        });
+        d3.select("#bt2016").on("click", function() {
+            drawChart("2016");
+        });
+        d3.select("#bt2015").on("click", function() {
+            drawChart("2015");
+        });
+        d3.select("#bt2014").on("click", function() {
+            drawChart("2014");
+        });
+        d3.select("#bt2013").on("click", function() {
+            drawChart("2013");
+        });
+        d3.select("#bt2012").on("click", function() {
+            drawChart("2012");
+        });
+        d3.select("#bt2011").on("click", function() {
+            drawChart("2011");
+        });
+
+        drawChart("2020");
+        
     })
