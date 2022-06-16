@@ -28,8 +28,7 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
         console.log(data);
 
         // set SVG size
-        let svgWidth = 700;
-        let svgHeight = 300;
+        let svgWidth = 700, svgHeight = 300;
         let margin = {top: 10, right: 20, bottom: 80, left: 50},
             width = svgWidth - margin.left - margin.right,
             height = svgHeight - margin.top - margin.bottom;
@@ -74,20 +73,9 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .call(d3.axisLeft(yScale).ticks(10))
             .selectAll("text")
                 .style("font-size","10px");
-        
-        // add y-axis gridlines
-        // chart.append("g")
-        //     .attr("class", "grid")
-        //     .call(d3.axisLeft(yScale)
-        //         .tickSize(-width)
-        //         .tickFormat('')
-        //         .ticks(10)
-        //     );
 
         // create tooltip div
-        let tooltip = d3.select("#crimeGraph")
-            .attr("class", "tooltip")    
-            .append("div")
+        let tooltip = d3.select(".tooltip")
             .style("opacity", 0)
             .style("background-color", "white")
             .style("border", "solid")
@@ -96,26 +84,27 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .style("padding", "5px")
 
         // mouseover events
-        let mouseover = function(event, d) {
+        let mouseover = function(d) {
             // Tooltip
             tooltip
-                .transition()
-                .duration(300)
                 .style("opacity", 0.9);
-            tooltip
-                .html("There were " + d.value + " occurences of "  + d.level_2 + " in " + selectedYear + ".")
-                .style("top", (event.pageY)+"px")
-                .style("left",(event.pageX)+"px")
             d3.select(this)
                 .style("stroke", "black")
-                .style("opacity", 0.8)
+                .style("opacity", 0.8);
+        }
+
+        // mousemove events
+        let mousemove = function(event, d) {
+            tooltip
+                .html("There were " + d.value + " occurences of "  + d.level_2 + " in " + selectedYear + ".")
+                .style("position", "absolute")
+                .style("top", (event.pageY)+"px")
+                .style("left",(event.pageX)+"px");
         }
 
         // mouseleave events
         let mouseleave = function(d) {
             tooltip
-                .transition()
-                .duration(500)
                 .style("opacity", 0)
             d3.select(this)
                 .style("stroke", "none")
@@ -134,5 +123,6 @@ fetch('https://data.gov.sg/api/action/datastore_search?resource_id=83c21090-bd19
             .attr("class", "svgRect")
             .attr("fill", "crimson")
             .on("mouseover", mouseover)
+            .on("mousemove", mousemove)
             .on("mouseleave", mouseleave);
     })
